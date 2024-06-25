@@ -17,11 +17,20 @@ class LoginSignupViewset(GenericViewSet):
     def sign_up(self, request, *args, **kwargs):
         """User sign up for social networking"""
         
-        email = (request.data.get('email', None)).strip()
-        password = (request.data.get('password', None)).strip()
-        first_name = (request.data.get('first_name', None)).strip()
-        last_name = (request.data.get('last_name', "")).strip()
+        email = request.data.get('email', None)
+        password = request.data.get('password', None)
+        first_name = request.data.get('first_name', None)
+        last_name = request.data.get('last_name', "")
         
+        if email:
+            email = email.strip()
+        if password: 
+            password = password.strip()
+        if first_name:
+            first_name = first_name.strip()
+        if last_name:
+            last_name = last_name.strip()
+            
         if len(email) > 255:
             raise ValidationError({'error': 'Email is too long.'})
         if len(first_name) > 50:
@@ -37,10 +46,9 @@ class LoginSignupViewset(GenericViewSet):
                 'error': 'First name is required for SignUp'
             })
         if not password:
-            # print("inside pass")
             alphabet = string.ascii_letters + string.digits 
             password = ''.join(secrets.choice(alphabet) for i in range(10)) 
-        # print("password", password)
+            
         try:     
             user = CustomUsers(email=email.lower(), first_name=first_name, last_name=last_name)
             user.set_password(password)
@@ -61,12 +69,15 @@ class LoginSignupViewset(GenericViewSet):
     def login(self, request, *args, **kwargs):
         """Login with email and password"""
         
-        email = (request.data.get('email', None)).strip()
-        password = (request.data.get('password', None)).strip()
+        email = request.data.get('email', None)
+        password = request.data.get('password', None)
         
         if not email or not password:
             raise ValidationError({'error': 'email & password are required!'})
-        
+        if email:
+            email = email.strip()
+        if password:
+            password =  password.strip()
         # user = authenticate(request, email=email, password=password)
         try:
             user_obj = CustomUsers.objects.get(email=email.lower())

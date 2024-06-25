@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/admin/Documents/Hiring projects assignment 2024/AccuKnox assignment/Social Networking/venv/bin/python3" "$0" "$@"
+'''exec' "/Users/admin/Documents/Hiring projects assignment 2024/AccuKnox assignment/SocialNetworking/venv/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

@@ -111,6 +111,7 @@ env.bak/
 venv.bak/
 .zsh
 .sh
+.idea
 
 # Spyder project settings
 .spyderproject
