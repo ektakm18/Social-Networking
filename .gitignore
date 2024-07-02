@@ -8,6 +8,9 @@
 *protected
 *data
 
+# Virtual environment
+pyvenv.cfg
+
 # C extensions
 *.so
 
