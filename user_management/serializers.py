@@ -28,3 +28,13 @@ class CustomUserSerializer(serializers.Serializer):
             raise ValidationError({'error': 'Email cannot exceed 200 characters.'})
 
         return data
+    
+class LoginEmailValidationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        try:
+            validate_email(value)
+        except ValidationError:
+            raise serializers.ValidationError("Invalid email format.")
+        return value

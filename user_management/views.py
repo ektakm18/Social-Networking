@@ -9,7 +9,7 @@ import string
 from user_management.models import CustomUsers 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from user_management.serializers import CustomUserSerializer
+from user_management.serializers import CustomUserSerializer, LoginEmailValidationSerializer
 
 class LoginSignupViewset(GenericViewSet):
     permission_classes = [AllowAny]
@@ -60,14 +60,13 @@ class LoginSignupViewset(GenericViewSet):
             user.set_password(password)
             user.save()
             return Response({
-                'message': 'Welcome! You are succesfully signed up.',
+                'message': 'You are succesfully signed up.',
                 'email': email,
                 'password': password}, status=201)
 
         except IntegrityError:
             return Response({'error': 'A user with this email already exists.'}, status=400)
         except Exception as e:
-            print("inside2")
             return Response({
                 'error': str(e)}, status=500)
             
@@ -84,12 +83,21 @@ class LoginSignupViewset(GenericViewSet):
         email = email.strip()
         password =  password.strip()
         
+        serializer = LoginEmailValidationSerializer(data={
+                    'email': email,
+                    })
+        serializer.is_valid(raise_exception=True)
+        
+        # Retrieve validated data
+        validated_data = serializer.validated_data
+        email = validated_data['email']
+        
         try:
             user_obj = CustomUsers.objects.get(email=email.lower())
         except CustomUsers.DoesNotExist:
             raise ValidationError({
                 'error': 'Invalid email or password.'
-            }, status=401)
+            })
             
         if user_obj.check_password(password):
             refresh = RefreshToken.for_user(user_obj)
