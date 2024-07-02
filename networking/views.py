@@ -1,5 +1,5 @@
 from django.utils import timezone
-from networking.serializer import FriendRequestSerializer, FriendRequestViewSerializer, UserSerializer
+from networking.serializers import FriendRequestSerializer, FriendRequestViewSerializer, UserSerializer
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action

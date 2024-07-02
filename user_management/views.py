@@ -9,6 +9,7 @@ import string
 from user_management.models import CustomUsers 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from user_management.serializers import CustomUserSerializer
 
 class LoginSignupViewset(GenericViewSet):
     permission_classes = [AllowAny]
@@ -22,29 +23,36 @@ class LoginSignupViewset(GenericViewSet):
         first_name = request.data.get('first_name', None)
         last_name = request.data.get('last_name', "")
         
+        if not email or not first_name:
+            raise ValidationError({
+                'error': 'email & first_name is required for SignUp'})    
+        
         if last_name:
             last_name = last_name.strip()
+            
         if password:
             password = password.strip()
             
-        if len(email) > 255:
-            raise ValidationError({'error': 'Email is too long.'})
-        if len(first_name) > 50:
-            raise ValidationError({'error': 'First name is too long.'})
-        if len(last_name) > 50:
-            raise ValidationError({'error': 'Last name is too long.'})
-        
-        if not email:
-            raise ValidationError({
-                'error': 'email is required for SignUp'})    
-        if not first_name:
-            raise ValidationError({
-                'error': 'First name is required for SignUp'
-            })
+        if len(email) > 200:
+            raise ValidationError({'error': 'Email cannot exceed 200 characters.'})
         
         email = email.strip()
         first_name = first_name.strip()
         
+        
+        serializer = CustomUserSerializer(data={
+                    'email': email,
+                    'first_name': first_name,
+                    'last_name': last_name
+                    })
+        serializer.is_valid(raise_exception=True)
+        
+        # Retrieve validated data
+        validated_data = serializer.validated_data
+        email = validated_data['email']
+        first_name = validated_data['first_name']
+        last_name = validated_data.get('last_name', "")
+    
         if not password:
             alphabet = string.ascii_letters + string.digits 
             password = ''.join(secrets.choice(alphabet) for i in range(10)) 
