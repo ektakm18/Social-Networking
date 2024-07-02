@@ -9,7 +9,7 @@ import string
 from user_management.models import CustomUsers 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from user_management.serializers import CustomUserSerializer, LoginEmailValidationSerializer
+from user_management.serializers import CustomUserSerializer, EmailValidationSerializer
 
 class LoginSignupViewset(GenericViewSet):
     permission_classes = [AllowAny]
@@ -83,7 +83,7 @@ class LoginSignupViewset(GenericViewSet):
         email = email.strip()
         password =  password.strip()
         
-        serializer = LoginEmailValidationSerializer(data={
+        serializer = EmailValidationSerializer(data={
                     'email': email,
                     })
         serializer.is_valid(raise_exception=True)
