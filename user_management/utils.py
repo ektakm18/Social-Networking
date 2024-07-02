@@ -4,7 +4,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from user_management.models import CustomUsers
 from rest_framework.exceptions import ValidationError
 import uuid
-from user_management.serializer import CustomUsersSerializer
+from user_management.serializers import CustomUsersSerializer
 
 def custom_token_verification(request):
     """Function to verify token and return user_id"""

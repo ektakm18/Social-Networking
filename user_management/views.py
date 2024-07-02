@@ -33,17 +33,15 @@ class LoginSignupViewset(GenericViewSet):
         if password:
             password = password.strip()
             
-        if len(email) > 200:
-            raise ValidationError({'error': 'Email cannot exceed 200 characters.'})
+        if last_name:
+            raise ValidationError({'error': 'Last name cannot exceed 50 characters.'})
         
         email = email.strip()
         first_name = first_name.strip()
         
-        
         serializer = CustomUserSerializer(data={
                     'email': email,
                     'first_name': first_name,
-                    'last_name': last_name
                     })
         serializer.is_valid(raise_exception=True)
         
@@ -51,7 +49,7 @@ class LoginSignupViewset(GenericViewSet):
         validated_data = serializer.validated_data
         email = validated_data['email']
         first_name = validated_data['first_name']
-        last_name = validated_data.get('last_name', "")
+        # last_name = validated_data.get('last_name', "")
     
         if not password:
             alphabet = string.ascii_letters + string.digits 
