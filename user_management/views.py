@@ -22,14 +22,10 @@ class LoginSignupViewset(GenericViewSet):
         first_name = request.data.get('first_name', None)
         last_name = request.data.get('last_name', "")
         
-        if email:
-            email = email.strip()
-        if password: 
-            password = password.strip()
-        if first_name:
-            first_name = first_name.strip()
         if last_name:
             last_name = last_name.strip()
+        if password:
+            password = password.strip()
             
         if len(email) > 255:
             raise ValidationError({'error': 'Email is too long.'})
@@ -45,6 +41,10 @@ class LoginSignupViewset(GenericViewSet):
             raise ValidationError({
                 'error': 'First name is required for SignUp'
             })
+        
+        email = email.strip()
+        first_name = first_name.strip()
+        
         if not password:
             alphabet = string.ascii_letters + string.digits 
             password = ''.join(secrets.choice(alphabet) for i in range(10)) 
@@ -74,11 +74,10 @@ class LoginSignupViewset(GenericViewSet):
         
         if not email or not password:
             raise ValidationError({'error': 'email & password are required!'})
-        if email:
-            email = email.strip()
-        if password:
-            password =  password.strip()
-        # user = authenticate(request, email=email, password=password)
+
+        email = email.strip()
+        password =  password.strip()
+        
         try:
             user_obj = CustomUsers.objects.get(email=email.lower())
         except CustomUsers.DoesNotExist:

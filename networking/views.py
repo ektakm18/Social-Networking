@@ -1,19 +1,18 @@
 from django.utils import timezone
-import email
-from networking.serializer import FriendRequestSerializer, FriendRequestViewSerializer
+from networking.serializer import FriendRequestSerializer, FriendRequestViewSerializer, UserSerializer
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
+# from django.shortcuts import get_object_or_404
 # from rest_framework import status
 import secrets 
 import string
 from user_management.models import CustomUsers 
 from networking.models import FriendRequest
-from django.contrib.auth import authenticate
+# from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 # from user_management.serializer import LoginSignupSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -21,19 +20,29 @@ from user_management.utils import custom_token_verification
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class FriendRequestsViewset(GenericViewSet):
     permission_classes = [IsAuthenticated]
+    queryset = CustomUsers.objects.all()
+    pagination_class = StandardResultsSetPagination
     
     @action(detail=False, methods=['POST'])
     def send_request(self, request):
         current_user = custom_token_verification(request)
         # print("currrent", current_user['id'])
         
-        to_request = (request.data.get('to_request', None)).strip()
+        to_request = request.data.get('to_request', None)
         if not to_request:
             return Response({
                 'error': 'User email is required to send friend request'}, status=400)
+        to_request = to_request.strip()
+        
         if to_request == current_user['email']:
             return Response({
                 'error': 'User email cannot be same as logged in user'}, status=400)
@@ -111,8 +120,8 @@ class FriendRequestsViewset(GenericViewSet):
         """Respond to a pending friend request accept/reject"""
         current_user = custom_token_verification(request)
         
-        from_request = ((request.data.get('from_request', None)).strip()).lower()
-        status = (request.data.get('status', None)).strip()
+        from_request = request.data.get('from_request', None)
+        status = request.data.get('status', None)
         
         if not from_request:
             return Response({'error': 'User email is required to respond to the friend request'}, status=400)
@@ -120,6 +129,9 @@ class FriendRequestsViewset(GenericViewSet):
             return Response({'error': 'Friend request status is required'}, status=400)
         elif status not in ['accept', 'reject']:
             return Response({'error': 'Friend request status can only be accept/reject'}, status=400)
+        
+        from_request = (from_request.strip()).lower()
+        status = status.strip()
             
         if from_request == current_user['email']:
             return Response({
@@ -148,4 +160,25 @@ class FriendRequestsViewset(GenericViewSet):
             'message': 'Friend request successfully {}'.format(status),
             'data': FriendRequestViewSerializer(friend_request).data
             }, status=200)
+    
+    @action(detail=False, methods=['get'])
+    def search_users(self, request):
+        current_user = custom_token_verification(request)
+        search = request.query_params.get('search', None)
         
+        if not search:
+            return Response({'error': 'Search keyword is required'}, status=400)
+        search = search.strip()
+
+        if '@' in search and '.' in search and search.index('@') < search.index('.'):
+            search = search.lower()
+            # Exact email match
+            users = CustomUsers.objects.filter(email__iexact=search)
+        else:
+            # Partial name match
+            users = CustomUsers.objects.filter(Q(first_name__icontains=search))
+
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(users, request)
+        serializer = UserSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
