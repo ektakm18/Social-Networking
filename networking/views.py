@@ -1,5 +1,5 @@
 from django.utils import timezone
-from networking.serializers import FriendRequestSerializer, FriendRequestViewSerializer, UserSerializer
+from networking.serializers import FriendRequestSerializer, FriendRequestViewSerializer, UserSerializer, FriendViewSerializer
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
@@ -105,7 +105,7 @@ class FriendRequestsViewset(GenericViewSet):
         """Lists the received friend requests which are pending"""
         current_user = custom_token_verification(request)
         
-        friend_request = FriendRequest.objects.filter(receiver=current_user['id'], status='pending').order_by('created_at')
+        friend_request = FriendRequest.objects.filter(receiver=current_user['id'], status='pending').order_by('-created_at')
         serializer = FriendRequestViewSerializer(friend_request, many=True)
         # print("friendss", serializer.data)
         
@@ -120,7 +120,7 @@ class FriendRequestsViewset(GenericViewSet):
         friend_requests = FriendRequest.objects.filter(
                                 Q(sender=current_user['id'], status='accepted') | Q(receiver=current_user['id'], status='accepted')
                             ).order_by('created_at')
-        serializer = FriendRequestViewSerializer(friend_requests, many=True)
+        serializer = FriendViewSerializer(friend_requests, many=True, context={'request': request})
         # print("friendss", serializer.data)
         
         return Response(serializer.data, status=200)
@@ -146,6 +146,16 @@ class FriendRequestsViewset(GenericViewSet):
         if from_request == current_user['email']:
             return Response({
                 'error': 'User email cannot be same as logged in user'}, status=400)
+        
+        #email validation
+        serializer = EmailValidationSerializer(data={
+                    'email': from_request,
+                    })
+        serializer.is_valid(raise_exception=True)
+        
+        validated_data = serializer.validated_data
+        from_request = validated_data['email']
+        
         try: 
             from_request_obj = CustomUsers.objects.get(email=from_request)
         except CustomUsers.DoesNotExist:
@@ -186,7 +196,7 @@ class FriendRequestsViewset(GenericViewSet):
             users = CustomUsers.objects.filter(email__iexact=search)
         else:
             # Partial name match
-            users = CustomUsers.objects.filter(Q(first_name__icontains=search))
+            users = CustomUsers.objects.filter(Q(first_name__icontains=search)).order_by('first_name')
 
         paginator = self.pagination_class()
         result_page = paginator.paginate_queryset(users, request)
