@@ -7,15 +7,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from user_management.serializers import EmailValidationSerializer
 from django.db import IntegrityError
-# from django.shortcuts import get_object_or_404
-# from rest_framework import status
-# import secrets 
-# import string
 from user_management.models import CustomUsers 
 from networking.models import FriendRequest
-# from django.contrib.auth import authenticate
-# from rest_framework_simplejwt.tokens import RefreshToken
-# from user_management.serializer import LoginSignupSerializer
 from rest_framework.permissions import IsAuthenticated
 from user_management.utils import custom_token_verification
 from django.db.models import Q
