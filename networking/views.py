@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from user_management.serializers import EmailValidationSerializer
 from django.db import IntegrityError
 # from django.shortcuts import get_object_or_404
 # from rest_framework import status
@@ -42,6 +43,15 @@ class FriendRequestsViewset(GenericViewSet):
             return Response({
                 'error': 'User email is required to send friend request'}, status=400)
         to_request = to_request.strip()
+        
+        #email validation
+        serializer = EmailValidationSerializer(data={
+                    'email': to_request,
+                    })
+        serializer.is_valid(raise_exception=True)
+        
+        validated_data = serializer.validated_data
+        to_request = validated_data['email']
         
         if to_request == current_user['email']:
             return Response({
